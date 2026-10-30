@@ -120,8 +120,7 @@
     if (z <= -1) level = { key: "easy", label: "余裕" };
     else if (z <= 0) level = { key: "ok", label: "妥当" };
     else if (z <= 1) level = { key: "challenge", label: "挑戦的" };
-    else if (z <= 2) level = { key: "hard", label: "困難" };
-    else level = { key: "unreal", label: "現状では非現実的" };
+    else level = { key: "hard", label: "困難" };
     return { pred, gap, z, level, cv: PARAMS.cv };
   }
 

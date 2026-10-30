@@ -41,7 +41,7 @@ tr.kmrow td{font-weight:700;border-top:3px solid var(--fg);font-size:1.15rem}
 .verdict .lv{font-size:1.8rem;font-weight:800}
 .verdict.easy,.verdict.ok{border-color:var(--fast)}.verdict.easy .lv,.verdict.ok .lv{color:var(--fast)}
 .verdict.challenge{border-color:#d08a00}.verdict.challenge .lv{color:#d08a00}
-.verdict.hard,.verdict.unreal{border-color:var(--slow)}.verdict.hard .lv,.verdict.unreal .lv{color:var(--slow)}
+.verdict.hard{border-color:var(--slow)}.verdict.hard .lv{color:var(--slow)}
 .verdict dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0 0}
 .verdict dt{color:var(--sub)}.verdict dd{margin:0;text-align:right;font-weight:700}
 .verdict .gap{font-size:.95rem;margin-top:6px}
@@ -142,8 +142,7 @@ details .src{font-size:.85rem;color:var(--sub)}
 <li>余裕：目標が予測より1CV以上遅い</li>
 <li>妥当：目標が予測以下（0〜1CV遅い）</li>
 <li>挑戦的：予測より0〜1CV速い（普段の変動の範囲内）</li>
-<li>困難：1〜2CV速い（好調時にのみ到達）</li>
-<li>現状では非現実的：2CV超速い</li>
+<li>困難：1CV超速い（好調時でも到達は難しい）</li>
 </ul>
 <p>練習による向上は含まない。</p>
 <p class="src">Hopkins WG, Hewson DJ. Med Sci Sports Exerc 33:1588–1592, 2001. ／ Hurst P, Board L. Meas Phys Educ Exerc Sci 21:10–14, 2017.</p>
@@ -152,8 +151,8 @@ details .src{font-size:.85rem;color:var(--sub)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261030h"></script>
-<script src="pace.js?v=20261030h"></script>
+<script src="courses.js?v=20261030i"></script>
+<script src="pace.js?v=20261030i"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
@@ -213,7 +212,13 @@ function render() {
   save();
   const out = $("result");
   const course = COURSES[state.course];
-  $("courseNote").textContent = course.note || "";
+  // コース説明＋平地比のタイム低下（目標未入力時は22:00で算出）
+  const setNote = T0 => {
+    let t = course.note || "";
+    try { const f = Pace.plan(course, T0, "even_effort").flatEq; t += `平地コースに比して、約${((T0 - f) / f * 100).toFixed(1)}%のタイム低下のおそれ。`; } catch (e) {}
+    $("courseNote").textContent = t;
+  };
+  setNote(22 * 60);
   if (renderFigures._c !== course) { renderFigures(course); renderMap(course); renderFigures._c = course; }
   $("stratDesc").textContent = STRATS[state.strat].desc;
 
@@ -225,6 +230,7 @@ function render() {
   let r;
   try { r = Pace.plan(course, T, state.strat); }
   catch (e) { out.innerHTML = `<p class="err">${e.message}</p>`; return; }
+  setNote(T);
 
   renderVerdict(course, T);
   let html = `<p class="summary">目標 <b>${fmt(T)}</b>　平均 <b>${fmt(r.avgPerKm)}</b>/km<br>平地換算 <b>${fmt(r.flatEq)}</b> 相当</p>`;
