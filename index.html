@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>5km持続走 ペース配分</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#fff;--fg:#111;--sub:#555;--line:#c8c8c8;--accent:#0b5cad;--accent-fg:#fff;--slow:#c0392b;--fast:#1e7d32;--card:#f2f4f7;--gravel:#c26a00;--area:#9ccc9c;}
 @media (prefers-color-scheme: dark){:root{--bg:#121212;--fg:#f2f2f2;--sub:#bbb;--line:#444;--accent:#5aa9ff;--accent-fg:#000;--slow:#ff8a7a;--fast:#7ddc87;--card:#1f1f1f;--gravel:#f0a030;--area:#3f7a46;}}
@@ -49,8 +50,15 @@ details summary{font-weight:700;font-size:1.1rem;cursor:pointer;padding:4px 0}
 details h3{font-size:1rem;margin:14px 0 4px}
 details p,details li{margin:4px 0}
 details .src{font-size:.85rem;color:var(--sub)}
-.fig svg{width:100%;height:auto;display:block}
+#routeFig svg,#elevFig svg{width:100%;height:auto;display:block}
 .fig h3{font-size:1.05rem;margin:12px 0 4px}
+#map{height:320px;border-radius:10px;margin-top:4px;background:var(--line)}
+.ctrl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.ctrl button,.btn{min-height:48px;font-size:1rem;font-weight:700;border:2px solid var(--accent);background:var(--bg);color:var(--accent);border-radius:8px}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.row label{font-size:1rem;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.row input[type=checkbox]{width:24px;height:24px}
+#geoOut{font-size:.85rem;color:var(--sub);word-break:break-all;margin-top:6px}
 .legend{display:flex;gap:16px;font-size:.9rem;color:var(--sub);margin:4px 0 0;flex-wrap:wrap}
 .legend i{display:inline-block;width:22px;height:6px;border-radius:3px;vertical-align:middle;margin-right:4px}
 .tag{display:inline-block;font-size:.8rem;padding:0 6px;border-radius:4px;border:1px solid currentColor;margin-left:4px}
@@ -100,6 +108,24 @@ details .src{font-size:.85rem;color:var(--sub)}
   <span class="h">コース</span>
   <h3>経路略図</h3>
   <div id="routeFig"></div>
+  <h3>空中写真</h3>
+  <div id="map"></div>
+  <div class="row">
+    <label><input type="checkbox" id="showRoute" checked> 経路を重ねる</label>
+    <button type="button" class="btn" id="geoToggle" style="flex:1">位置合わせ</button>
+  </div>
+  <div id="geoPanel" hidden>
+    <div class="ctrl">
+      <button type="button" data-g="n">↑</button><button type="button" data-g="s">↓</button>
+      <button type="button" data-g="w">←</button><button type="button" data-g="e">→</button>
+      <button type="button" data-g="rl">左回転</button><button type="button" data-g="rr">右回転</button>
+      <button type="button" data-g="zo">縮小</button><button type="button" data-g="zi">拡大</button>
+    </div>
+    <div class="row"><label>移動量 <select id="geoStep"><option value="2">2m</option><option value="10" selected>10m</option><option value="50">50m</option></select></label>
+      <button type="button" class="btn" id="geoReset">初期値に戻す</button></div>
+    <div id="geoOut"></div>
+  </div>
+  <p class="desc">出典：国土地理院（地理院タイル 空中写真）。経路は概略位置。</p>
   <h3>高低図（標高 m）</h3>
   <div id="elevFig"></div>
   <div class="legend"><span><i style="background:var(--accent)"></i>舗装</span><span><i style="background:var(--gravel)"></i>砂利道</span></div>
@@ -142,6 +168,7 @@ details .src{font-size:.85rem;color:var(--sub)}
 </section>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="courses.js"></script>
 <script src="pace.js"></script>
 <script>
@@ -204,7 +231,7 @@ function render() {
   const out = $("result");
   const course = COURSES[state.course];
   $("courseNote").textContent = course.note || "";
-  if (renderFigures._c !== course) { renderFigures(course); renderFigures._c = course; }
+  if (renderFigures._c !== course) { renderFigures(course); renderMap(course); renderFigures._c = course; }
   $("stratDesc").textContent = STRATS[state.strat].desc;
 
   const m = parseInt($("min").value, 10), s = parseInt($("sec").value, 10);
@@ -323,6 +350,73 @@ function renderFigures(c) {
   $("elevFig").innerHTML = `<svg viewBox="0 0 ${GW} ${GH}" role="img" aria-label="高低図">${g}<path d="${d}" fill="var(--area)" opacity=".6"/><g stroke-width="3" stroke-linecap="round">${line}</g></svg>`;
 }
 
+// 空中写真＋経路の重ね合わせ
+const MAP = { map: null, line: null, marks: null, geo: null, course: null };
+function geoKey(c) { return "pace5k-geo-" + c.id; }
+function loadGeo(c) {
+  try { const g = JSON.parse(localStorage.getItem(geoKey(c)) || "null"); if (g) return g; } catch (e) {}
+  return Object.assign({}, c.geo);
+}
+function saveGeo(c, g) { try { localStorage.setItem(geoKey(c), JSON.stringify(g)); } catch (e) {} }
+function toLatLng(g, p) {
+  const dx = (p[0] - g.ax) * g.mpp, dy = (p[1] - g.ay) * g.mpp, r = g.rot * Math.PI / 180;
+  const ex = dx * Math.cos(r) - dy * Math.sin(r), ny = -(dx * Math.sin(r) + dy * Math.cos(r));
+  return [g.lat + ny / 111320, g.lon + ex / (111320 * Math.cos(g.lat * Math.PI / 180))];
+}
+function drawRoute() {
+  const c = MAP.course, g = MAP.geo, m = MAP.map;
+  if (MAP.line) MAP.line.remove();
+  if (MAP.marks) MAP.marks.remove();
+  if (!$("showRoute").checked) { $("geoOut").textContent = ""; return; }
+  const total = c.segments.reduce((a, s) => a + (s.len || 200), 0) / 1000;
+  const pts = c.route, cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const len = cum[cum.length - 1];
+  const at = km => { const d = km / total * len; let i = 1; while (i < cum.length - 1 && cum[i] < d) i++;
+    const t = (d - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
+    return toLatLng(g, [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t]); };
+  const cs = getComputedStyle(document.documentElement);
+  const col = { p: cs.getPropertyValue("--accent").trim(), g: cs.getPropertyValue("--gravel").trim() };
+  MAP.line = L.layerGroup().addTo(m);
+  let k = 0, step = 0.01;
+  while (k < total - 1e-9) {
+    const gv = isGravel(c, k + step / 2), seg = [at(k)];
+    while (k < total - 1e-9 && isGravel(c, k + step / 2) === gv) { k += step; seg.push(at(Math.min(k, total))); }
+    L.polyline(seg, { color: "#fff", weight: 9, opacity: .9 }).addTo(MAP.line);
+    L.polyline(seg, { color: gv ? col.g : col.p, weight: 5 }).addTo(MAP.line);
+  }
+  MAP.marks = L.layerGroup().addTo(m);
+  const icon = (t, bg) => L.divIcon({ className: "", iconSize: [26, 26], iconAnchor: [13, 13],
+    html: `<div style="width:26px;height:26px;border-radius:13px;background:${bg};color:#fff;border:2px solid #fff;font:700 14px/22px sans-serif;text-align:center">${t}</div>` });
+  for (let i = 1; i < total; i++) L.marker(at(i), { icon: icon(i, "#222") }).addTo(MAP.marks);
+  L.marker(at(0), { icon: icon("S", "#1e7d32") }).addTo(MAP.marks);
+  L.marker(at(total), { icon: icon("G", "#c0392b") }).addTo(MAP.marks);
+  $("geoOut").textContent = "geo: " + JSON.stringify({ ax: g.ax, ay: g.ay, lat: +g.lat.toFixed(6), lon: +g.lon.toFixed(6), mpp: +g.mpp.toFixed(4), rot: +g.rot.toFixed(1) });
+}
+function renderMap(c) {
+  const box = $("map");
+  if (typeof L === "undefined" || !c.geo || !c.route) { box.innerHTML = '<p class="desc" style="padding:12px">空中写真を読み込めません（通信環境を確認）</p>'; return; }
+  MAP.course = c; MAP.geo = loadGeo(c);
+  if (!MAP.map) {
+    MAP.map = L.map(box, { dragging: !L.Browser.mobile, scrollWheelZoom: false, tap: false, attributionControl: true });
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", {
+      maxZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">出典：国土地理院</a>' }).addTo(MAP.map);
+  }
+  drawRoute();
+  const ll = c.route.map(p => toLatLng(MAP.geo, p));
+  MAP.map.fitBounds(ll, { padding: [16, 16] });
+}
+function geoAdjust(op) {
+  const g = MAP.geo, st = +$("geoStep").value, dlat = st / 111320, dlon = st / (111320 * Math.cos(g.lat * Math.PI / 180));
+  if (op === "n") g.lat += dlat; if (op === "s") g.lat -= dlat;
+  if (op === "e") g.lon += dlon; if (op === "w") g.lon -= dlon;
+  if (op === "rl") g.rot -= st >= 50 ? 5 : st >= 10 ? 1 : 0.2;
+  if (op === "rr") g.rot += st >= 50 ? 5 : st >= 10 ? 1 : 0.2;
+  if (op === "zi") g.mpp *= st >= 50 ? 1.05 : st >= 10 ? 1.01 : 1.002;
+  if (op === "zo") g.mpp /= st >= 50 ? 1.05 : st >= 10 ? 1.01 : 1.002;
+  saveGeo(MAP.course, g); drawRoute();
+}
+
 function init() {
   load();
   if (!COURSES[state.course]) state.course = 0;
@@ -336,6 +430,10 @@ function init() {
   $("min").oninput = render;
   $("sec").oninput = render;
   $("ttmin").oninput = render;
+  $("showRoute").onchange = drawRoute;
+  $("geoToggle").onclick = () => { $("geoPanel").hidden = !$("geoPanel").hidden; };
+  document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => geoAdjust(b.dataset.g));
+  $("geoReset").onclick = () => { MAP.geo = Object.assign({}, MAP.course.geo); saveGeo(MAP.course, MAP.geo); drawRoute(); };
   $("ttsec").oninput = render;
   render();
 }
