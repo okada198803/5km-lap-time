@@ -4,7 +4,8 @@
   const PARAMS = {
     // 勾配：Minetti et al. (2002) J Appl Physiol 93:1039 の走行エネルギーコスト多項式（上り・下りとも適用）
     // 同一代謝出力なら速度∝1/Cr → 所要時間∝Cr として時間係数に換算
-    surface: { paved: 1.00, track: 1.00, dirt: 1.02, gravel: 1.03, grass: 1.05 }, // 砂利は間接根拠からの推定、芝は Sassi et al. 2011
+    downEff: 0.75,   // 下りの短縮効果の反映率（経験値）。1.0=Minetti式どおり
+    surface: { paved: 1.00, track: 1.00, dirt: 1.02, gravel: 1.02, grass: 1.05 }, // 砂利は間接根拠（Soule & Goldman 1972 ほか）、芝は Sassi et al. 2011
     turnLoss: 0.5,   // 直角カーブ1か所あたりのロス（秒）推定値
     uturnLoss: 4.0,  // 折り返し1か所あたりのロス（秒）推定値
     negSplit: 0.02,  // ネガティブスプリット：開始+2% → 終了-2%
@@ -27,7 +28,7 @@
     if (v === 0) return 1;
     const g = v / len;
     const fu = up / v, fd = down / v;
-    return fu * minetti(g) / C0 + fd * minetti(-g) / C0;
+    return fu * minetti(g) / C0 + fd * (1 + (minetti(-g) / C0 - 1) * PARAMS.downEff);
   }
 
   // 路面係数。文字列 or 割合指定 { paved: 0.25, gravel: 0.75 }
