@@ -100,10 +100,15 @@ details .src{font-size:.85rem;color:var(--sub)}
 <p>Cr = 155.4i⁵ − 30.4i⁴ − 43.3i³ + 46.3i² + 19.5i + 3.6 [J/kg/m]（i=勾配）</p>
 <p>同じきつさ（代謝出力一定）なら所要時間はCrに比例するとして換算。勾配±1%で約+5.5%／−5.3%。</p>
 <p class="src">Minetti AE, et al. J Appl Physiol 93:1039–1046, 2002.</p>
-<h3>砂利道 +3% <span class="tag">推定</span></h3>
-<p>締まった砂利道を直接測定した論文はない。凹凸路で約+5%（Voloshina &amp; Ferris 2015）を上限とし、それより小さい値を仮置き。</p>
-<p class="src">Voloshina AS, Ferris DP. J Exp Biol 218:711–719, 2015.</p>
-<h3>直角カーブ 1か所1.5秒 <span class="tag">推定</span></h3>
+<h3>砂利道 +3% <span class="tag">間接根拠</span></h3>
+<p>締まった砂利道を走って直接測った論文はない。次の3つから2〜5%の範囲と推定し、中間の3%を採用。</p>
+<ul>
+<li>芝生：舗装比 約+5%（Sassi et al. 2011）</li>
+<li>凹凸路（高さ最大2.5cmの段差）：約+5%（Voloshina &amp; Ferris 2015）</li>
+<li>未舗装路（歩行）：舗装比 +10%（Soule &amp; Goldman 1972）。同じ凹凸で走行の増加は歩行の約1/5（歩行+27%、走行+5%：Voloshina &amp; Ferris 2015）なので、走行に換算すると約+2%</li>
+</ul>
+<p class="src">Sassi A, et al. J Strength Cond Res 25:606–611, 2011. ／ Soule RG, Goldman RF. J Appl Physiol 32:706–708, 1972. ／ Voloshina AS, Ferris DP. J Exp Biol 218:711–719, 2015.</p>
+<h3>直角カーブ 1か所0.5秒 <span class="tag">推定</span></h3>
 <p>走速度での90°カーブのロスを測定した論文はない（低速の180°折返しのみ：Hatamoto et al. 2014）。減速・再加速分の仮置き値。</p>
 <p class="src">Hatamoto Y, et al. PLoS ONE 9(1):e81850, 2014.</p>
 <p>※推定値は、実走ラップとの差を courses.js の経験係数（kmExp）で校正する。</p>

@@ -29,10 +29,19 @@ Cr(i) = 155.4i⁵ − 30.4i⁴ − 43.3i³ + 46.3i² + 19.5i + 3.6 [J/kg/m]
 代謝出力一定なら速度 ∝ 1/Cr、所要時間 ∝ Cr として、勾配係数 = Cr(i)/Cr(0)。±1%で約+5.5%／−5.3%。
 区間内に上りと下りが混在する場合は、長さを上り量:下り量で按分する。
 
-### 砂利道 +3%（推定）
-締まった砂利道の直接測定はない。凹凸路で約+5%（Voloshina & Ferris 2015）を上限として仮置き。
+### 砂利道 +3%（間接根拠）
+締まった砂利道を走って直接測った論文はない。次の3つから2〜5%の範囲と推定し、中間の3%を採用。
 
-### 直角カーブ 1.5秒/か所（推定）
+| 根拠 | 値 |
+|---|---|
+| 芝生の走行（Sassi et al. 2011） | 舗装比 約+5%（Cr 4.02→4.22 J/kg/m） |
+| 凹凸路の走行（Voloshina & Ferris 2015、段差最大2.5cm、2.3m/s） | 約+5% |
+| 未舗装路の歩行（Soule & Goldman 1972） | 舗装比 +10% |
+| 走行/歩行の地形感度比（Voloshina & Ferris 2015：歩行+27%、走行+5%） | 約1/5 → 未舗装路の走行は約+2% |
+
+芝の係数も Sassi et al. に合わせて1.05とした。
+
+### 直角カーブ 0.5秒/か所（推定）
 走速度での90°カーブの測定はない（低速180°折返しのみ：Hatamoto et al. 2014）。仮置き値。
 
 推定値は、実走ラップとの差を courses.js の `kmExp`（km毎の経験係数）で校正する。
@@ -56,6 +65,8 @@ CVの根拠：5km前後の記録の個人内変動は上位ランナーで1.2〜
 ### 文献
 - Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. Energy cost of walking and running at extreme uphill and downhill slopes. J Appl Physiol 93:1039–1046, 2002.
 - Voloshina AS, Ferris DP. Biomechanics and energetics of running on uneven terrain. J Exp Biol 218:711–719, 2015.
+- Sassi A, et al. The cost of running on natural grass and artificial turf surfaces. J Strength Cond Res 25:606–611, 2011.
+- Soule RG, Goldman RF. Terrain coefficients for energy cost prediction. J Appl Physiol 32:706–708, 1972.
 - Hatamoto Y, et al. The relationship between running velocity and the energy cost of turning during running. PLoS ONE 9(1):e81850, 2014.
 - Hopkins WG, Hewson DJ. Variability of competitive performance of distance runners. Med Sci Sports Exerc 33:1588–1592, 2001.
 - Hurst P, Board L. Reliability of 5-km running performance in a competitive environment. Meas Phys Educ Exerc Sci 21:10–14, 2017.

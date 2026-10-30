@@ -4,8 +4,8 @@
   const PARAMS = {
     // 勾配：Minetti et al. (2002) J Appl Physiol 93:1039 の走行エネルギーコスト多項式（上り・下りとも適用）
     // 同一代謝出力なら速度∝1/Cr → 所要時間∝Cr として時間係数に換算
-    surface: { paved: 1.00, track: 1.00, dirt: 1.02, gravel: 1.03, grass: 1.04 }, // 推定値
-    turnLoss: 1.5,   // 直角カーブ1か所あたりのロス（秒）推定値
+    surface: { paved: 1.00, track: 1.00, dirt: 1.02, gravel: 1.03, grass: 1.05 }, // 砂利は間接根拠からの推定、芝は Sassi et al. 2011
+    turnLoss: 0.5,   // 直角カーブ1か所あたりのロス（秒）推定値
     uturnLoss: 4.0,  // 折り返し1か所あたりのロス（秒）推定値
     negSplit: 0.02,  // ネガティブスプリット：開始+2% → 終了-2%
     cv: 0.020        // 5km記録の日間変動係数（Hopkins & Hewson 2001 / Hurst & Board 2017 を基に設定）
