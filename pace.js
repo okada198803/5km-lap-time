@@ -9,6 +9,7 @@
     turnLoss: 0.5,   // 直角カーブ1か所あたりのロス（秒）推定値
     uturnLoss: 4.0,  // 折り返し1か所あたりのロス（秒）推定値
     negSplit: 0.03,  // ネガティブスプリット：開始+3% → 終了-3%（経験値に合わせ設定）
+    slowGain: 0.24,  // コース効果（起伏・路面）の拡大率：目標が17:00から780秒遅いごとに +slowGain（経験値）。平地換算・達成判定のみに適用
     distScale: 0.50, // ペース配分の起伏・路面効果の縮小率（経験値：17:00目標でkm間の差15秒に合わせ設定）。平地換算・達成判定には適用しない
     cv: 0.020        // 5km記録の日間変動係数（Hopkins & Hewson 2001 / Hurst & Board 2017 を基に設定）
   };
@@ -53,11 +54,20 @@
   }
 
   // 平坦・舗装・直線に対するコース全体の係数 { W: 重み付き距離, C: 固定ロス秒, total: 距離 }
-  function courseFactor(course) {
+  // 時間依存の拡大率：17:00で1.0、遅いほど大きい（直線）
+  function slowMul(t) {
+    if (t == null) return 1;
+    return Math.max(0, 1 + PARAMS.slowGain * (t - 1020) / 780);
+  }
+
+  // t: このコースでの所要時間(秒)。省略時は拡大なし
+  function courseFactor(course, t) {
     const segs = buildSegs(course);
+    const m = slowMul(t);
     let W = 0, C = 0, total = 0;
     segs.forEach(s => {
-      W += s.len * gradeCoef(s.up, s.down, s.len) * surfCoef(s.surface) * ((course.kmExp && course.kmExp[s.km]) || 1);
+      const f = gradeCoef(s.up, s.down, s.len) * surfCoef(s.surface) * ((course.kmExp && course.kmExp[s.km]) || 1);
+      W += s.len * (1 + m * (f - 1));
       C += (s.turns || 0) * PARAMS.turnLoss + (s.uturns || 0) * PARAMS.uturnLoss;
       total += s.len;
     });
@@ -106,7 +116,7 @@
     kms.forEach(k => { k.diff = k.t - avgPerKm * k.len / 1000; });
 
     // 平地換算：同じ負荷で平坦・舗装・直線5kmを走った場合のタイム
-    const cf = courseFactor(course);
+    const cf = courseFactor(course, T);
     const flatEq = (T - cf.C) / cf.W * cf.total;
 
     return { total, T, avgPerKm, segs, kms, flatEq };
@@ -114,8 +124,9 @@
 
   // 達成判定。tt: 平地5km TT記録又は平地目標(秒), T: このコースでの目標(秒)
   function assess(course, tt, T) {
-    const cf = courseFactor(course);
-    const pred = Math.round(tt * cf.W / cf.total + cf.C); // このコースでの予測タイム（表示と同じ秒単位）
+    let pred = tt * 1.03;                           // 予測タイムは自身に依存するため反復で収束させる
+    for (let i = 0; i < 20; i++) { const c = courseFactor(course, pred); pred = tt * c.W / c.total + c.C; }
+    pred = Math.round(pred); // このコースでの予測タイム（表示と同じ秒単位）
     const gap = (pred - T) / pred;                 // 正 = 目標が予測より速い
     const z = gap / PARAMS.cv;                     // 日間変動の何倍か
     let level;

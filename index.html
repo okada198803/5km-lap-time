@@ -141,6 +141,7 @@ details .src{font-size:.85rem;color:var(--sub)}
 <li>イーブンエフォート：km毎の最遅−最速が15秒 → 計算 +8／−7／−6／+8／−3秒（差15秒）</li>
 <li>ネガティブスプリット：同じく15秒程度 → 計算 +10／−6／−6／+7／−6秒（差16秒）</li>
 <li>平地換算：16:30〜16:40 → 計算 16:34</li>
+<li>30:00目標の平地換算：29:10程度（差50秒）→ 計算 29:10。17:00の差26秒から、目標が遅いほど起伏・路面の効果を直線的に拡大（30:00で約1.19倍）。平地換算と達成判定のみに適用</li>
 </ul>
 <p>※ペース配分は起伏・路面の効果を50%に縮小して表示するが、平地換算と達成判定は縮小せず論文値（100%）で算出する。そのため、配分から見える遅れ（約1.3%）より判定・平地換算の遅れ（約2.5%）が大きく、判定はやや厳しめに出る。平地換算は17:00目標の経験値（16:30〜16:40）と整合を確認済み。</p>
 <h3>達成判定 <span class="tag">論文</span></h3>
@@ -159,8 +160,8 @@ details .src{font-size:.85rem;color:var(--sub)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261030o"></script>
-<script src="pace.js?v=20261030o"></script>
+<script src="courses.js?v=20261031a"></script>
+<script src="pace.js?v=20261031a"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
