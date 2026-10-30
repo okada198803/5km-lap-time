@@ -9,6 +9,7 @@
     turnLoss: 0.5,   // 直角カーブ1か所あたりのロス（秒）推定値
     uturnLoss: 4.0,  // 折り返し1か所あたりのロス（秒）推定値
     negSplit: 0.03,  // ネガティブスプリット：開始+3% → 終了-3%（経験値に合わせ設定）
+    distScale: 0.50, // ペース配分の起伏・路面効果の縮小率（経験値：17:00目標でkm間の差15秒に合わせ設定）。平地換算・達成判定には適用しない
     cv: 0.020        // 5km記録の日間変動係数（Hopkins & Hewson 2001 / Hurst & Board 2017 を基に設定）
   };
 
@@ -73,9 +74,10 @@
       let f = gradeCoef(s.up, s.down, s.len);
       f *= surfCoef(s.surface);
       f *= (course.kmExp && course.kmExp[s.km]) || 1;
+      f = 1 + PARAMS.distScale * (f - 1);
       if (strat === "negative") {
         const x = (s.start + s.end) / 2 / total;
-        f *= 1 + PARAMS.negSplit * (1 - 2 * x);
+        f *= 1 + PARAMS.distScale * PARAMS.negSplit * (1 - 2 * x);
       }
       s.w = s.len * f;
       s.c = (s.turns || 0) * PARAMS.turnLoss + (s.uturns || 0) * PARAMS.uturnLoss;
