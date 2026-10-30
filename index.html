@@ -169,8 +169,8 @@ details .src{font-size:.85rem;color:var(--sub)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261030c"></script>
-<script src="pace.js?v=20261030c"></script>
+<script src="courses.js?v=20261030d"></script>
+<script src="pace.js?v=20261030d"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
@@ -320,7 +320,8 @@ function renderFigures(c) {
 
 // 空中写真＋経路の重ね合わせ
 const MAP = { map: null, line: null, marks: null, course: null, path: null, edit: false, vtx: null };
-function pathKey(c) { return "pace5k-path-" + c.id; }
+// 既定経路が更新されたら端末内の修正を無効にするため、既定値の内容をキーに含める
+function pathKey(c) { return "pace5k-path-" + c.id + "-" + c.path.length + "-" + c.path[0].join(","); }
 function loadPath(c) {
   try { const p = JSON.parse(localStorage.getItem(pathKey(c)) || "null"); if (Array.isArray(p) && p.length > 1) return p; } catch (e) {}
   return c.path.map(p => p.slice());
