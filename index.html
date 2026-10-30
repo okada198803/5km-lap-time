@@ -109,7 +109,7 @@ details .src{font-size:.85rem;color:var(--sub)}
     <label><input type="checkbox" id="showRoute" checked> 経路を重ねる</label>
   </div>
   <p class="desc">出典：国土地理院（地理院タイル 空中写真）</p>
-  <h3>高低図（縦横同一縮尺）</h3>
+  <h3>高低図（縦25倍）</h3>
   <div id="elevFig"></div>
   <div class="legend"><span><i style="background:var(--accent)"></i>舗装</span><span><i style="background:var(--gravel)"></i>砂利道</span></div>
 </section>
@@ -152,8 +152,8 @@ details .src{font-size:.85rem;color:var(--sub)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261030g"></script>
-<script src="pace.js?v=20261030g"></script>
+<script src="courses.js?v=20261030h"></script>
+<script src="pace.js?v=20261030h"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
@@ -280,11 +280,11 @@ function renderFigures(c) {
   fig.hidden = false;
   const total = c.segments.reduce((a, s) => a + (s.len || 200), 0) / 1000;
 
-  // 高低図（縦横同一縮尺：標高1mを距離1mと同じ長さで表示）
+  // 高低図（縦方向を距離に対して25倍に強調）
   const e = c.elev, n = e.length, dx = total / (n - 1);
   const lo = Math.min(...e), hi = Math.max(...e);
-  const GW = 400, l = 12, r = 22, pw = GW - l - r, k = pw / (total * 1000); // px/m
-  const base = 46, GH = 80;
+  const EX = 25, GW = 400, l = 12, r = 22, pw = GW - l - r, k = pw / (total * 1000) * EX; // px/m
+  const base = 28 + (hi - lo) * k, GH = base + 30;
   const X = km => l + km / total * pw, Y = v => base - (v - lo) * k;
   let g = `<text x="${l}" y="16" font-size="12" fill="var(--sub)">最高${hi.toFixed(1)}m・最低${lo.toFixed(1)}m（高低差${(hi - lo).toFixed(1)}m）</text>`;
   g += `<line x1="${l}" x2="${GW - r}" y1="${base}" y2="${base}" stroke="var(--line)"/>`;
@@ -294,7 +294,10 @@ function renderFigures(c) {
     const km = (i - 0.5) * dx;
     line += `<line x1="${X((i - 1) * dx).toFixed(1)}" y1="${Y(e[i - 1]).toFixed(2)}" x2="${X(i * dx).toFixed(1)}" y2="${Y(e[i]).toFixed(2)}" stroke="var(--${isGravel(c, km) ? "gravel" : "accent"})"/>`;
   }
-  $("elevFig").innerHTML = `<svg viewBox="0 0 ${GW} ${GH}" role="img" aria-label="高低図（縦横同一縮尺）">${g}<g stroke-width="3" stroke-linecap="round">${line}</g></svg>`;
+  let d = `M${X(0)},${base}`;
+  e.forEach((v, i) => d += ` L${X(i * dx).toFixed(1)},${Y(v).toFixed(2)}`);
+  d += ` L${X(total)},${base} Z`;
+  $("elevFig").innerHTML = `<svg viewBox="0 0 ${GW} ${GH.toFixed(1)}" role="img" aria-label="高低図（縦25倍）">${g}<path d="${d}" fill="var(--area)" opacity=".6"/><g stroke-width="3" stroke-linecap="round">${line}</g></svg>`;
 }
 
 // 空中写真＋経路の重ね合わせ
