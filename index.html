@@ -53,12 +53,9 @@ details .src{font-size:.85rem;color:var(--sub)}
 #routeFig svg,#elevFig svg{width:100%;height:auto;display:block}
 .fig h3{font-size:1.05rem;margin:12px 0 4px}
 #map{height:320px;border-radius:10px;margin-top:4px;background:var(--line)}
-.ctrl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.ctrl button,.btn{min-height:48px;font-size:1rem;font-weight:700;border:2px solid var(--accent);background:var(--bg);color:var(--accent);border-radius:8px}
 .row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .row label{font-size:1rem;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .row input[type=checkbox]{width:24px;height:24px}
-#geoOut{font-size:.85rem;color:var(--sub);word-break:break-all;margin-top:6px}
 .legend{display:flex;gap:16px;font-size:.9rem;color:var(--sub);margin:4px 0 0;flex-wrap:wrap}
 .legend i{display:inline-block;width:22px;height:6px;border-radius:3px;vertical-align:middle;margin-right:4px}
 .tag{display:inline-block;font-size:.8rem;padding:0 6px;border-radius:4px;border:1px solid currentColor;margin-left:4px}
@@ -112,20 +109,8 @@ details .src{font-size:.85rem;color:var(--sub)}
   <div id="map"></div>
   <div class="row">
     <label><input type="checkbox" id="showRoute" checked> 経路を重ねる</label>
-    <button type="button" class="btn" id="geoToggle" style="flex:1">位置合わせ</button>
   </div>
-  <div id="geoPanel" hidden>
-    <div class="ctrl">
-      <button type="button" data-g="n">↑</button><button type="button" data-g="s">↓</button>
-      <button type="button" data-g="w">←</button><button type="button" data-g="e">→</button>
-      <button type="button" data-g="rl">左回転</button><button type="button" data-g="rr">右回転</button>
-      <button type="button" data-g="zo">縮小</button><button type="button" data-g="zi">拡大</button>
-    </div>
-    <div class="row"><label>移動量 <select id="geoStep"><option value="2">2m</option><option value="10" selected>10m</option><option value="50">50m</option></select></label>
-      <button type="button" class="btn" id="geoReset">初期値に戻す</button></div>
-    <div id="geoOut"></div>
-  </div>
-  <p class="desc">出典：国土地理院（地理院タイル 空中写真）。経路は概略位置。</p>
+  <p class="desc">出典：国土地理院（地理院タイル 空中写真）</p>
   <h3>高低図（標高 m）</h3>
   <div id="elevFig"></div>
   <div class="legend"><span><i style="background:var(--accent)"></i>舗装</span><span><i style="background:var(--gravel)"></i>砂利道</span></div>
@@ -352,12 +337,6 @@ function renderFigures(c) {
 
 // 空中写真＋経路の重ね合わせ
 const MAP = { map: null, line: null, marks: null, geo: null, course: null };
-function geoKey(c) { return "pace5k-geo-" + c.id; }
-function loadGeo(c) {
-  try { const g = JSON.parse(localStorage.getItem(geoKey(c)) || "null"); if (g) return g; } catch (e) {}
-  return Object.assign({}, c.geo);
-}
-function saveGeo(c, g) { try { localStorage.setItem(geoKey(c), JSON.stringify(g)); } catch (e) {} }
 function toLatLng(g, p) {
   const dx = (p[0] - g.ax) * g.mpp, dy = (p[1] - g.ay) * g.mpp, r = g.rot * Math.PI / 180;
   const ex = dx * Math.cos(r) - dy * Math.sin(r), ny = -(dx * Math.sin(r) + dy * Math.cos(r));
@@ -367,7 +346,7 @@ function drawRoute() {
   const c = MAP.course, g = MAP.geo, m = MAP.map;
   if (MAP.line) MAP.line.remove();
   if (MAP.marks) MAP.marks.remove();
-  if (!$("showRoute").checked) { $("geoOut").textContent = ""; return; }
+  if (!$("showRoute").checked) return;
   const total = c.segments.reduce((a, s) => a + (s.len || 200), 0) / 1000;
   const pts = c.route, cum = [0];
   for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
@@ -391,12 +370,11 @@ function drawRoute() {
   for (let i = 1; i < total; i++) L.marker(at(i), { icon: icon(i, "#222") }).addTo(MAP.marks);
   L.marker(at(0), { icon: icon("S", "#1e7d32") }).addTo(MAP.marks);
   L.marker(at(total), { icon: icon("G", "#c0392b") }).addTo(MAP.marks);
-  $("geoOut").textContent = "geo: " + JSON.stringify({ ax: g.ax, ay: g.ay, lat: +g.lat.toFixed(6), lon: +g.lon.toFixed(6), mpp: +g.mpp.toFixed(4), rot: +g.rot.toFixed(1) });
 }
 function renderMap(c) {
   const box = $("map");
   if (typeof L === "undefined" || !c.geo || !c.route) { box.innerHTML = '<p class="desc" style="padding:12px">空中写真を読み込めません（通信環境を確認）</p>'; return; }
-  MAP.course = c; MAP.geo = loadGeo(c);
+  MAP.course = c; MAP.geo = c.geo;
   if (!MAP.map) {
     MAP.map = L.map(box, { dragging: !L.Browser.mobile, scrollWheelZoom: false, tap: false, attributionControl: true });
     L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", {
@@ -405,16 +383,6 @@ function renderMap(c) {
   drawRoute();
   const ll = c.route.map(p => toLatLng(MAP.geo, p));
   MAP.map.fitBounds(ll, { padding: [16, 16] });
-}
-function geoAdjust(op) {
-  const g = MAP.geo, st = +$("geoStep").value, dlat = st / 111320, dlon = st / (111320 * Math.cos(g.lat * Math.PI / 180));
-  if (op === "n") g.lat += dlat; if (op === "s") g.lat -= dlat;
-  if (op === "e") g.lon += dlon; if (op === "w") g.lon -= dlon;
-  if (op === "rl") g.rot -= st >= 50 ? 5 : st >= 10 ? 1 : 0.2;
-  if (op === "rr") g.rot += st >= 50 ? 5 : st >= 10 ? 1 : 0.2;
-  if (op === "zi") g.mpp *= st >= 50 ? 1.05 : st >= 10 ? 1.01 : 1.002;
-  if (op === "zo") g.mpp /= st >= 50 ? 1.05 : st >= 10 ? 1.01 : 1.002;
-  saveGeo(MAP.course, g); drawRoute();
 }
 
 function init() {
@@ -431,9 +399,6 @@ function init() {
   $("sec").oninput = render;
   $("ttmin").oninput = render;
   $("showRoute").onchange = drawRoute;
-  $("geoToggle").onclick = () => { $("geoPanel").hidden = !$("geoPanel").hidden; };
-  document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => geoAdjust(b.dataset.g));
-  $("geoReset").onclick = () => { MAP.geo = Object.assign({}, MAP.course.geo); saveGeo(MAP.course, MAP.geo); drawRoute(); };
   $("ttsec").oninput = render;
   render();
 }
