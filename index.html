@@ -152,8 +152,8 @@ details .src{font-size:.85rem;color:var(--sub)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js"></script>
-<script src="pace.js"></script>
+<script src="courses.js?v=20261030b"></script>
+<script src="pace.js?v=20261030b"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
@@ -302,24 +302,19 @@ function renderFigures(c) {
 }
 
 // 空中写真＋経路の重ね合わせ
-const MAP = { map: null, line: null, marks: null, geo: null, course: null };
-function toLatLng(g, p) {
-  const dx = (p[0] - g.ax) * g.mpp, dy = (p[1] - g.ay) * g.mpp, r = g.rot * Math.PI / 180;
-  const ex = dx * Math.cos(r) - dy * Math.sin(r), ny = -(dx * Math.sin(r) + dy * Math.cos(r));
-  return [g.lat + ny / 111320, g.lon + ex / (111320 * Math.cos(g.lat * Math.PI / 180))];
-}
+const MAP = { map: null, line: null, marks: null, course: null };
 function drawRoute() {
-  const c = MAP.course, g = MAP.geo, m = MAP.map;
+  const c = MAP.course, m = MAP.map;
   if (MAP.line) MAP.line.remove();
   if (MAP.marks) MAP.marks.remove();
   if (!$("showRoute").checked) return;
   const total = c.segments.reduce((a, s) => a + (s.len || 200), 0) / 1000;
-  const pts = c.route, cum = [0];
-  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const pts = c.path, cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + m.distance(pts[i - 1], pts[i]));
   const len = cum[cum.length - 1];
   const at = km => { const d = km / total * len; let i = 1; while (i < cum.length - 1 && cum[i] < d) i++;
     const t = (d - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
-    return toLatLng(g, [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t]); };
+    return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t]; };
   const cs = getComputedStyle(document.documentElement);
   const col = { p: cs.getPropertyValue("--accent").trim(), g: cs.getPropertyValue("--gravel").trim() };
   MAP.line = L.layerGroup().addTo(m);
@@ -339,16 +334,15 @@ function drawRoute() {
 }
 function renderMap(c) {
   const box = $("map");
-  if (typeof L === "undefined" || !c.geo || !c.route) { box.innerHTML = '<p class="desc" style="padding:12px">空中写真を読み込めません（通信環境を確認）</p>'; return; }
-  MAP.course = c; MAP.geo = c.geo;
+  if (typeof L === "undefined" || !c.path) { box.innerHTML = '<p class="desc" style="padding:12px">空中写真を読み込めません（通信環境を確認）</p>'; return; }
+  MAP.course = c;
   if (!MAP.map) {
-    MAP.map = L.map(box, { dragging: !L.Browser.mobile, scrollWheelZoom: false, tap: false, attributionControl: true });
+    MAP.map = L.map(box, { zoomSnap: 0.25, dragging: !L.Browser.mobile, scrollWheelZoom: false, tap: false, attributionControl: true });
     L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", {
       maxZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">出典：国土地理院</a>' }).addTo(MAP.map);
   }
+  MAP.map.fitBounds(c.path, { padding: [16, 16] });
   drawRoute();
-  const ll = c.route.map(p => toLatLng(MAP.geo, p));
-  MAP.map.fitBounds(ll, { padding: [16, 16] });
 }
 
 function init() {
