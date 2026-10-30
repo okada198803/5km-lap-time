@@ -159,8 +159,8 @@ details .src{font-size:.85rem;color:var(--sub)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261030n"></script>
-<script src="pace.js?v=20261030n"></script>
+<script src="courses.js?v=20261030o"></script>
+<script src="pace.js?v=20261030o"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
@@ -259,7 +259,8 @@ function render() {
         const note = [];
         if (sg.up >= 0.5) note.push(`↑${Math.round(sg.up)}m`);
         if (sg.down >= 0.5) note.push(`↓${Math.round(sg.down)}m`);
-        if (surfKeys(sg.surface).includes("gravel")) note.push("砂利");
+        const sk = surfKeys(sg.surface);
+        if (sk.includes("gravel")) note.push(sk.length > 1 ? "一部砂利" : "砂利");
         if (sg.turns) note.push("カーブ");
         if (sg.uturns) note.push("折り返し");
         html += `<tr><td>${sg.start}〜${sg.end}m<span class="info">${note.join(" ")}</span></td>
