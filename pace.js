@@ -113,7 +113,7 @@
   // 達成判定。tt: 平地5km TT記録又は平地目標(秒), T: このコースでの目標(秒)
   function assess(course, tt, T) {
     const cf = courseFactor(course);
-    const pred = tt * cf.W / cf.total + cf.C;      // このコースでの予測タイム
+    const pred = Math.round(tt * cf.W / cf.total + cf.C); // このコースでの予測タイム（表示と同じ秒単位）
     const gap = (pred - T) / pred;                 // 正 = 目標が予測より速い
     const z = gap / PARAMS.cv;                     // 日間変動の何倍か
     let level;
