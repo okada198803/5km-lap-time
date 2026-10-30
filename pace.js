@@ -110,28 +110,19 @@
     return { total, T, avgPerKm, segs, kms, flatEq };
   }
 
-  // 標準正規分布の累積分布関数
-  function normCdf(z) {
-    const t = 1 / (1 + 0.2316419 * Math.abs(z));
-    const d = 0.3989423 * Math.exp(-z * z / 2);
-    const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-    return z > 0 ? 1 - p : p;
-  }
-
-  // 達成判定。tt: 平地5km TTの記録(秒), T: このコースでの目標(秒)
+  // 達成判定。tt: 平地5km TT記録又は平地目標(秒), T: このコースでの目標(秒)
   function assess(course, tt, T) {
     const cf = courseFactor(course);
     const pred = tt * cf.W / cf.total + cf.C;      // このコースでの予測タイム
     const gap = (pred - T) / pred;                 // 正 = 目標が予測より速い
     const z = gap / PARAMS.cv;                     // 日間変動の何倍か
-    const prob = 1 - normCdf(z);                   // 1回の試走で目標以内に入る確率（目安）
     let level;
     if (z <= -1) level = { key: "easy", label: "余裕" };
     else if (z <= 0) level = { key: "ok", label: "妥当" };
     else if (z <= 1) level = { key: "challenge", label: "挑戦的" };
     else if (z <= 2) level = { key: "hard", label: "困難" };
     else level = { key: "unreal", label: "現状では非現実的" };
-    return { pred, gap, z, prob, level, cv: PARAMS.cv };
+    return { pred, gap, z, level, cv: PARAMS.cv };
   }
 
   const api = { PARAMS, SURFACE_NAME, plan, assess, courseFactor, minetti, gradeCoef, surfCoef };
