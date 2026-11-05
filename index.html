@@ -36,15 +36,6 @@ td.cum{white-space:nowrap}
 tr.kmrow td{font-weight:700;border-top:3px solid var(--fg);font-size:1.15rem}
 .info{display:block;font-size:.85rem;color:var(--sub);font-weight:400}
 .err{color:var(--slow);font-weight:700}
-.opt{font-size:.9rem;font-weight:400;color:var(--sub)}
-.verdict{border-radius:12px;padding:14px;margin-top:4px;border:3px solid var(--line)}
-.verdict .lv{font-size:1.8rem;font-weight:800}
-.verdict.easy,.verdict.ok{border-color:var(--fast)}.verdict.easy .lv,.verdict.ok .lv{color:var(--fast)}
-.verdict.challenge{border-color:#d08a00}.verdict.challenge .lv{color:#d08a00}
-.verdict.hard{border-color:var(--slow)}.verdict.hard .lv{color:var(--slow)}
-.verdict dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0 0}
-.verdict dt{color:var(--sub)}.verdict dd{margin:0;text-align:right;font-weight:700}
-.verdict .gap{font-size:.95rem;margin-top:6px}
 details{font-size:.95rem}
 details summary{font-weight:700;font-size:1.1rem;cursor:pointer;padding:4px 0}
 details h3{font-size:1rem;margin:14px 0 4px}
@@ -80,15 +71,6 @@ details .src{font-size:.85rem;color:var(--sub)}
 </section>
 
 <section>
-  <span class="h">TT記録又は平地目標 <span class="opt">（平地5km・任意・入力すると達成判定）</span></span>
-  <div class="time">
-    <input id="ttmin" type="number" inputmode="numeric" min="10" max="59" placeholder="--" aria-label="TT分"> 分
-    <input id="ttsec" type="number" inputmode="numeric" min="0" max="59" placeholder="--" aria-label="TT秒"> 秒
-  </div>
-  <div id="verdict"></div>
-</section>
-
-<section>
   <span class="h">走り方</span>
   <div class="seg" id="strat"></div>
   <p class="desc" id="stratDesc"></p>
@@ -121,7 +103,7 @@ details .src{font-size:.85rem;color:var(--sub)}
 <p>Minetti et al. (2002) の走行エネルギーコスト式を適用。</p>
 <p>Cr = 155.4i⁵ − 30.4i⁴ − 43.3i³ + 46.3i² + 19.5i + 3.6 [J/kg/m]（i=勾配）</p>
 <p>同じきつさ（代謝出力一定）なら所要時間はCrに比例するとして換算。勾配±1%で約+5.5%／−5.3%。</p>
-<p>上り・下りとも式どおり算出。ただしペース配分の表示では、起伏・路面の効果を50%に縮小して適用（下記「経験値による検証」）。平地換算・達成判定には縮小を適用しない。</p>
+<p>上り・下りとも式どおり算出。ペース配分では、起伏・路面の効果を縮小して適用（下記「経験値による検証」）。</p>
 <p class="src">Minetti AE, et al. J Appl Physiol 93:1039–1046, 2002.</p>
 <h3>砂利道 +2% <span class="tag">間接根拠</span></h3>
 <p>締まった砂利道を走って直接測った論文はない。次の3つから2〜5%の範囲と推定し、締まった路面として下限の2%を採用。</p>
@@ -136,37 +118,25 @@ details .src{font-size:.85rem;color:var(--sub)}
 <p class="src">Hatamoto Y, et al. PLoS ONE 9(1):e81850, 2014.</p>
 <p>※推定値は、実走ラップとの差を courses.js の経験係数（kmExp）で校正する。</p>
 <h3>経験値による検証 <span class="tag">経験</span></h3>
-<p>17:00目標で、次の経験値と整合するよう設定（起伏・路面の効果を50%に縮小、ネガティブスプリットの前後差は同率で縮小）。この縮小率は他の目標タイムにも同じ比率で適用。</p>
+<p>実走でコースと平地のタイムがほぼ同じであったため、平地との比較は行わない。ペース配分は次の経験値に合わせて設定。</p>
 <ul>
-<li>イーブンエフォート：km毎の最遅−最速が15秒 → 計算 +8／−7／−6／+8／−3秒（差15秒）</li>
-<li>ネガティブスプリット：同じく15秒程度 → 計算 +10／−6／−6／+7／−6秒（差16秒）</li>
-<li>平地換算：16:30〜16:40 → 計算 16:34</li>
-<li>30:00目標の平地換算：29:10程度（差50秒）→ 計算 29:10。17:00の差26秒から、目標が遅いほど起伏・路面の効果を直線的に拡大（30:00で約1.19倍）。平地換算と達成判定のみに適用</li>
+<li>起伏・路面の効果を17:00目標で50%に縮小し、km毎の増減（秒）はどの目標タイムでも同じ値とする（各km ±15秒以内）</li>
+<li>体感に合わせkm毎の経験係数を設定：4km目 +4%、5km目 −3%（縮小前）。1〜3km目は計算どおり</li>
+<li>イーブンエフォート：平均比 +7／−7／−6／+12／−6秒（4km目は1km目より約5秒遅い、5km目は2・3km目と同程度）</li>
+<li>ネガティブスプリット：平均比 +10／−6／−6／+11／−9秒（前後差は同率で縮小）</li>
 </ul>
-<p>※ペース配分は起伏・路面の効果を50%に縮小して表示するが、平地換算と達成判定は縮小せず論文値（100%）で算出する。そのため、配分から見える遅れ（約1.3%）より判定・平地換算の遅れ（約2.5%）が大きく、判定はやや厳しめに出る。平地換算は17:00目標の経験値（16:30〜16:40）と整合を確認済み。</p>
-<h3>達成判定 <span class="tag">論文</span></h3>
-<p>平地TTの記録に上記コース係数を掛けて、このコースでの予測タイムを算出し、目標との差を本人の日間変動（CV）と比較。</p>
-<p>5km記録の日間変動：上位ランナーで1.2〜1.9%、遅いランナーほど大きい（Hopkins &amp; Hewson 2001）。5km TTで0.95%（Hurst &amp; Board 2017）。本アプリはCV=2.0%で計算。</p>
-<ul>
-<li>余裕：目標が予測より1CV以上遅い</li>
-<li>妥当：目標が予測と同じ（秒単位）か遅い（0〜1CV遅い）</li>
-<li>挑戦的：予測より0〜1CV速い（普段の変動の範囲内）</li>
-<li>困難：1CV超速い（好調時でも到達は難しい）</li>
-</ul>
-<p>練習による向上は含まない。</p>
-<p class="src">Hopkins WG, Hewson DJ. Med Sci Sports Exerc 33:1588–1592, 2001. ／ Hurst P, Board L. Meas Phys Educ Exerc Sci 21:10–14, 2017.</p>
 </details>
 </section>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261031a"></script>
-<script src="pace.js?v=20261031a"></script>
+<script src="courses.js?v=20261105a"></script>
+<script src="pace.js?v=20261105a"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
   even_pace:   { label: "イーブン\nペース",     desc: "コースに関係なく、全区間を同じペースで走ります。" },
-  negative:    { label: "ネガティブ\nスプリット", desc: "イーブンエフォートを基準に、前半を抑えて後半を上げます（前後差 約6%）。" }
+  negative:    { label: "ネガティブ\nスプリット", desc: "イーブンエフォートを基準に、前半を抑えて後半を上げます。" }
 };
 const MODES = { simple: "簡易\n（1km毎）", detail: "詳細\n（200m毎）" };
 
@@ -179,12 +149,10 @@ function load() {
     Object.assign(state, s.state || {});
     if (s.min != null) $("min").value = s.min;
     if (s.sec != null) $("sec").value = s.sec;
-    if (s.ttmin) $("ttmin").value = s.ttmin;
-    if (s.ttsec) $("ttsec").value = s.ttsec;
   } catch (e) {}
 }
 function save() {
-  try { localStorage.setItem("pace5k", JSON.stringify({ state, min: $("min").value, sec: $("sec").value, ttmin: $("ttmin").value, ttsec: $("ttsec").value })); } catch (e) {}
+  try { localStorage.setItem("pace5k", JSON.stringify({ state, min: $("min").value, sec: $("sec").value })); } catch (e) {}
 }
 
 function fmt(t) {
@@ -221,28 +189,20 @@ function render() {
   save();
   const out = $("result");
   const course = COURSES[state.course];
-  // コース説明＋平地比のタイム低下（目標未入力時は22:00で算出）
-  const setNote = T0 => {
-    let t = course.note || "";
-    try { const f = Pace.plan(course, T0, "even_effort").flatEq; t += `平地コースに比して、約${((T0 - f) / f * 100).toFixed(1)}%のタイム低下のおそれ。`; } catch (e) {}
-    $("courseNote").textContent = t;
-  };
-  setNote(22 * 60);
+  $("courseNote").textContent = course.note || "";
   if (renderFigures._c !== course) { renderFigures(course); renderMap(course); renderFigures._c = course; }
   $("stratDesc").textContent = STRATS[state.strat].desc;
 
   const m = parseInt($("min").value, 10), s = parseInt($("sec").value, 10);
   if (isNaN(m) || isNaN(s) || s < 0 || s > 59) { out.innerHTML = '<p class="err">目標タイムを正しく入力してください</p>'; return; }
   const T = m * 60 + s;
-  if (T < 12 * 60 || T > 45 * 60) { $("verdict").innerHTML = ""; out.innerHTML = '<p class="err">目標タイムは12:00〜45:00の範囲で入力してください</p>'; return; }
+  if (T < 12 * 60 || T > 45 * 60) { out.innerHTML = '<p class="err">目標タイムは12:00〜45:00の範囲で入力してください</p>'; return; }
 
   let r;
   try { r = Pace.plan(course, T, state.strat); }
   catch (e) { out.innerHTML = `<p class="err">${e.message}</p>`; return; }
-  setNote(T);
 
-  renderVerdict(course, T);
-  let html = `<p class="summary">目標 <b>${fmt(T)}</b>　平均 <b>${fmt(r.avgPerKm)}</b>/km<br>平地換算 <b>${fmt(r.flatEq)}</b> 相当</p>`;
+  let html = `<p class="summary">目標 <b>${fmt(T)}</b>　平均 <b>${fmt(r.avgPerKm)}</b>/km</p>`;
 
   if (state.mode === "simple") {
     html += `<div class="tbl"><table><thead><tr><th>区間</th><th>ラップ<br>平均比</th><th>通過</th></tr></thead><tbody>`;
@@ -274,22 +234,6 @@ function render() {
 }
 
 function surfKeys(sf) { return !sf ? [] : typeof sf === "string" ? [sf] : Object.keys(sf).filter(k => sf[k] > 0); }
-
-function renderVerdict(course, T) {
-  const el = $("verdict");
-  const m = parseInt($("ttmin").value, 10), s = parseInt($("ttsec").value || "0", 10);
-  if (isNaN(m)) { el.innerHTML = ""; return; }
-  if (isNaN(s) || s < 0 || s > 59 || m < 12 || m > 45) { el.innerHTML = '<p class="err">TT記録又は平地目標を正しく入力してください</p>'; return; }
-  const a = Pace.assess(course, m * 60 + s, T);
-  const g = Math.round(a.gap * 1000) / 10;
-  const gapTxt = g > 0 ? `予測より${g}%速い` : g < 0 ? `予測より${-g}%遅い` : "予測と同じ";
-  el.innerHTML = `<div class="verdict ${a.level.key}">
-    <div class="lv">${a.level.label}</div>
-    <dl>
-      <dt>このコースでの予測</dt><dd>${fmt(a.pred)}</dd>
-      <dt>目標</dt><dd>${fmt(T)}</dd>
-    </dl><div class="gap">目標は${gapTxt}</div></div>`;
-}
 
 function isGravel(c, km) { return (c.gravel || []).some(([a, b]) => km >= a && km < b); }
 
@@ -375,11 +319,9 @@ function init() {
   buildButtons($("mode"), MODES, "mode");
   $("min").oninput = render;
   $("sec").oninput = render;
-  $("ttmin").oninput = render;
   // 秒は2桁表示
-  ["sec", "ttsec"].forEach(id => { const el = $(id); const pad = () => { if (el.value !== "" && el.value.length < 2) el.value = el.value.padStart(2, "0"); }; el.onblur = pad; pad(); });
+  ["sec"].forEach(id => { const el = $(id); const pad = () => { if (el.value !== "" && el.value.length < 2) el.value = el.value.padStart(2, "0"); }; el.onblur = pad; pad(); });
   $("showRoute").onchange = () => drawRoute();
-  $("ttsec").oninput = render;
   render();
 }
 init();
