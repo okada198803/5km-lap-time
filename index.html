@@ -120,18 +120,18 @@ details .src{font-size:.85rem;color:var(--sub)}
 <h3>経験値による検証 <span class="tag">経験</span></h3>
 <p>実走でコースと平地のタイムがほぼ同じであったため、平地との比較は行わない。ペース配分は次の経験値に合わせて設定。</p>
 <ul>
-<li>起伏・路面の効果を17:00目標で50%に縮小し、km毎の増減（秒）はどの目標タイムでも同じ値とする（各km ±15秒以内）</li>
-<li>体感に合わせkm毎の経験係数を設定：4km目 +4%、5km目 −3%（縮小前）。1〜3km目は計算どおり</li>
-<li>イーブンエフォート：平均比 +7／−7／−6／+12／−6秒（4km目は1km目より約5秒遅い、5km目は2・3km目と同程度）</li>
-<li>ネガティブスプリット：平均比 +10／−6／−6／+11／−9秒（前後差は同率で縮小）</li>
+<li>起伏・路面の効果を17:00目標で34%に縮小し、最速km−最遅kmの差を15秒以内とする。km毎の増減（秒）はどの目標タイムでも同じ値</li>
+<li>体感に合わせkm毎の経験係数を設定：4km目 +6%、5km目 −3.5%（縮小前）。1〜3km目は計算どおり</li>
+<li>イーブンエフォート：平均比 +5／−5／−4／+10／−5秒（差15秒。4km目は1km目より約5秒遅い、5km目は2・3km目と同程度）</li>
+<li>ネガティブスプリット：平均比 +6／−4／−4／+9／−6秒（差15秒。前後差は同率で縮小）</li>
 </ul>
 </details>
 </section>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="courses.js?v=20261105a"></script>
-<script src="pace.js?v=20261105a"></script>
+<script src="courses.js?v=20261105b"></script>
+<script src="pace.js?v=20261105b"></script>
 <script>
 const STRATS = {
   even_effort: { label: "イーブン\nエフォート", desc: "起伏・路面に合わせ、どの区間もきつさが同じになるよう配分します。" },
