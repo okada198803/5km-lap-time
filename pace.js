@@ -10,7 +10,9 @@
     uturnLoss: 4.0,  // 折り返し1か所あたりのロス（秒）推定値
     negSplit: 0.03,  // ネガティブスプリット：開始+3% → 終了-3%（経験値に合わせ設定）
     distScale: 0.34, // ペース配分の起伏・路面効果の縮小率（経験値：最速km−最遅kmの差15秒以内に合わせ設定）
-    refTime: 1020    // 増減幅（秒）の基準タイム。どの目標タイムでもkm毎の増減秒数をこの時の値に揃える（経験値）
+    refTime: 1020,   // 増減幅（秒）の基準タイム。この時の最速km−最遅kmの差が15秒
+    // 目標タイム帯ごとの最速km−最遅kmの許容差（秒）（経験値）：〜19分台 15秒、20〜23分台 20秒、24分以降 28秒
+    rangeBands: [[1200, 15], [1440, 19.7], [Infinity, 27.5]] // 秒丸めで許容差を超えないよう 19.7・27.5 とする
   };
 
   const SURFACE_NAME = { paved: "舗装", track: "トラック", dirt: "土", gravel: "砂利", grass: "芝" };
@@ -56,8 +58,9 @@
   function plan(course, T, strat) {
     const segs = buildSegs(course);
     const total = segs.reduce((a, s) => a + s.len, 0);
-    // 効果の縮小率。目標タイムに反比例させ、km毎の増減秒数を目標タイムによらず一定にする
-    const k = PARAMS.distScale * PARAMS.refTime / T;
+    // 効果の縮小率。目標タイムに反比例させてkm毎の増減秒数を一定にし、タイム帯の許容差に比例して拡げる
+    const band = PARAMS.rangeBands.find(([lim]) => T < lim)[1];
+    const k = PARAMS.distScale * PARAMS.refTime / T * band / 15;
 
     segs.forEach(s => {
       if (strat === "even_pace") { s.w = s.len; s.c = 0; return; }
